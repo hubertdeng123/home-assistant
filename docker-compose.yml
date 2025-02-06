@@ -1,11 +1,12 @@
 services:
   homeassistant:
     container_name: homeassistant
-    image: "ghcr.io/home-assistant/home-assistant:stable"
+    image: "ghcr.io/home-assistant/home-assistant:2025.2.0"
     volumes:
       - ./config:/config
       - /etc/localtime:/etc/localtime:ro
-      - /run/dbus:/run/dbus:ro
+      - /run/dbus:/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
       - /dev:/dev
     devices:
       - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_46ed5bdff71bef1181029cd94909ffd0-if00-port0
@@ -15,6 +16,8 @@ services:
       - ${LAN_IP}:8123:8123
     environment:
       - TZ=America/Los_Angeles
+    networks:
+      - homeassistant-network
   zwave:
     container_name: zwave
     image: zwavejs/zwave-js-ui:9.27.8
@@ -28,6 +31,8 @@ services:
     ports:
       - 127.0.0.1:8091:8091
       - ${LAN_IP}:8091:8091
+    networks:
+      - homeassistant-network
   cloudflared:
     container_name: cloudflared
     image: cloudflare/cloudflared:2024.12.1
@@ -37,6 +42,12 @@ services:
       - ${CLOUDFLARED_PATH}/config.yml:/etc/cloudflared/config.yml:ro
       - ${CLOUDFLARED_PATH}/${CLOUDFLARED_TUNNEL_ID}.json:/etc/cloudflared/${CLOUDFLARED_TUNNEL_ID}.json:ro
     restart: unless-stopped
+    networks:
+      - homeassistant-network
+
 volumes:
   zwave-config:
 
+networks:
+  homeassistant-network:
+    external: true
