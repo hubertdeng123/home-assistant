@@ -1,7 +1,7 @@
 services:
   homeassistant:
     container_name: homeassistant
-    image: "ghcr.io/home-assistant/home-assistant:2025.2.0"
+    image: "ghcr.io/home-assistant/home-assistant:2025.3.1"
     volumes:
       - ./config:/config
       - /etc/localtime:/etc/localtime:ro
@@ -41,6 +41,20 @@ services:
       - ${CLOUDFLARED_PATH}/cert.pem:/etc/cloudflared/cert.pem:ro
       - ${CLOUDFLARED_PATH}/config.yml:/etc/cloudflared/config.yml:ro
       - ${CLOUDFLARED_PATH}/${CLOUDFLARED_TUNNEL_ID}.json:/etc/cloudflared/${CLOUDFLARED_TUNNEL_ID}.json:ro
+    restart: unless-stopped
+    networks:
+      - homeassistant-network
+  adguardhome:
+    container_name: adguardhome
+    image: adguard/adguardhome:v0.107.57
+    volumes:
+      - ./adguard_conf/work:/opt/adguardhome/work
+      - ./adguard_conf/conf:/opt/adguardhome/conf
+    ports:
+      - 53:53/tcp # plain dns over tcp
+      - 53:53/udp # plain dns over udp
+      - ${LAN_IP}:80:80 # http web interface
+      - ${LAN_IP}:3000:3000 # initial setup web interface
     restart: unless-stopped
     networks:
       - homeassistant-network
